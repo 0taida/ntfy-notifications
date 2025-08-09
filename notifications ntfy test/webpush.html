@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Push Notifications Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"], input[type="url"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .subscription-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .notifications-section {
+            margin-top: 30px;
+            border-top: 2px solid #eee;
+            padding-top: 20px;
+        }
+        .notifications-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .notifications-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+        .notification-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            background-color: white;
+            margin: 5px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+        .notification-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .notification-message {
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .notification-meta {
+            font-size: 12px;
+            color: #999;
+            display: flex;
+            justify-content: space-between;
+        }
+        .notification-tags {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+        }
+        .notification-tag {
+            background-color: #e9ecef;
+            color: #495057;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+        }
+        .clear-notifications {
+            background-color: #dc3545;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .clear-notifications:hover {
+            background-color: #c82333;
+        }
+        .notification-count {
+            background-color: #007bff;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Web Push Notifications Test</h1>
+        
+        <div class="form-group">
+            <label for="apiUrl">ntfy Base URL:</label>
+            <input type="url" id="apiUrl" value="http://localhost:8099" placeholder="http://localhost:8099">
+        </div>
+        
+        <div class="form-group">
+            <label for="authToken">Authentication Token:</label>
+            <input type="password" id="authToken" placeholder="Enter your Bearer token" value="eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJiNzBhMmE1Ni1hYTczLTRmODctOTZkOC1hNmFiOThmMjk5YjgiLCJ1c2VybmFtZSI6ImFkbWluQGV4YW1wbGUuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzUzNzgyMjg3LCJleHAiOjE4MTY4OTc0ODd9.ojoySYq1z3mNq9PJkIqCz-68_DH-OOqjcgt8V8LBTF8">
+        </div>
+        
+        <div class="form-group">
+            <label for="vapidKey">VAPID Public Key:</label>
+            <input type="text" id="vapidKey" placeholder="Enter your VAPID public key" value="BC7r1EiGxME5Pu7ghP8bOMXtwM8WlIlzYcr_9grg6de2ij-v7ZilE3LWkMWGrhARsT-M7KdCwsIplV5vvwELeNo">
+        </div>
+        
+        <div class="form-group">
+            <label for="topic">Topic:</label>
+            <input type="text" id="topic" value="user_b70a2a56-aa73-4f87-96d8-a6ab98f299b8_mdzs0288_hxo8mor5q" placeholder="Enter topic name">
+        </div>
+        
+        <div class="controls">
+            <button id="initBtn">Initialize Web Push</button>
+            <button id="subscribeBtn" disabled>Subscribe to Topic</button>
+            <button id="unsubscribeBtn" disabled>Unsubscribe</button>
+            <button id="testBtn" disabled>Send Test Notification</button>
+            <button id="checkSubscriptionBtn" disabled>Check Subscription</button>
+            <button id="manualTestBtn" disabled>Manual Test Notification</button>
+        </div>
+        
+        <div id="status"></div>
+        <div id="subscriptionInfo" class="subscription-info" style="display: none;"></div>
+        
+        <!-- Debug Information -->
+        <div class="form-group">
+            <button id="debugBtn" style="background-color: #6c757d;">Show Debug Info</button>
+            <div id="debugInfo" class="subscription-info" style="display: none;"></div>
+        </div>
+
+        <!-- Notifications Display Section -->
+        <div class="notifications-section">
+            <div class="notifications-header">
+                <h2>Received Notifications <span id="notificationCount" class="notification-count">0</span></h2>
+                <button id="clearNotifications" class="clear-notifications">Clear All</button>
+            </div>
+            <div id="notificationsList" class="notifications-list">
+                <div style="padding: 20px; text-align: center; color: #999;">
+                    No notifications received yet. Subscribe to a topic and send a test notification to see them here.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class WebPushManager {
+            constructor(apiUrl, authToken, vapidKey) {
+                this.apiUrl = apiUrl;
+                this.authToken = authToken;
+                this.vapidKey = vapidKey;
+                this.swRegistration = null;
+                this.notifications = [];
+                this.maxNotifications = 50; // Keep last 50 notifications
+            }
+
+            async init() {
+                if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+                    console.log('Service Worker or Push is not supported');
+                    return false;
+                }
+
+                try {
+                    this.swRegistration = await navigator.serviceWorker.register('/sw.js');
+                    console.log('Service Worker registered');
+                    console.log('Service Worker state:', this.swRegistration.active ? 'active' : 'not active');
+                    
+                    // Send VAPID key to service worker
+                    if (this.swRegistration.active) {
+                        this.swRegistration.active.postMessage({
+                            type: 'SET_VAPID_KEY',
+                            vapidKey: this.vapidKey
+                        });
+                        console.log('VAPID key sent to service worker');
+                    } else {
+                        console.log('Service worker not active yet, waiting...');
+                        // Wait for service worker to become active
+                        await new Promise(resolve => {
+                            this.swRegistration.addEventListener('activate', resolve, { once: true });
+                        });
+                        console.log('Service worker now active');
+                    }
+                    
+                    // Listen for messages from service worker
+                    navigator.serviceWorker.addEventListener('message', (event) => {
+                        console.log('Received message from service worker:', event.data);
+                        if (event.data.type === 'NOTIFICATION_RECEIVED') {
+                            console.log('Adding notification to display:', event.data.notification);
+                            this.addNotification(event.data.notification);
+                        } else {
+                            console.log('Received other message type:', event.data.type);
+                        }
+                    });
+                    
+                    // Listen for BroadcastChannel messages (more reliable)
+                    const broadcastChannel = new BroadcastChannel('web-push-notifications');
+                    console.log('BroadcastChannel created for web-push-notifications');
+                    
+                    broadcastChannel.addEventListener('message', (event) => {
+                        console.log('Received BroadcastChannel message:', event.data);
+                        if (event.data.type === 'NOTIFICATION_RECEIVED') {
+                            console.log('Adding notification to display via BroadcastChannel:', event.data.notification);
+                            this.addNotification(event.data.notification);
+                        } else if (event.data.type === 'TEST_RESPONSE') {
+                            console.log('Service worker responded to test message:', event.data.message);
+                        } else if (event.data.type === 'TEST_PUSH') {
+                            console.log('Received test push message:', event.data.message);
+                        } else {
+                            console.log('Received other BroadcastChannel message type:', event.data.type);
+                        }
+                    });
+                    
+                    // Test BroadcastChannel communication
+                    setTimeout(() => {
+                        broadcastChannel.postMessage({
+                            type: 'TEST_MESSAGE',
+                            message: 'Test from main page'
+                        });
+                        console.log('Sent test message via BroadcastChannel');
+                    }, 1000);
+                    
+                    // Register this page as a client with the service worker
+                    if (this.swRegistration.active) {
+                        this.swRegistration.active.postMessage({
+                            type: 'REGISTER_CLIENT',
+                            clientId: 'webpush-test-page'
+                        });
+                        console.log('Registered as client with service worker');
+                    }
+                    
+                    return true;
+                } catch (error) {
+                    console.error('Service Worker registration failed:', error);
+                    return false;
+                }
+            }
+
+            addNotification(notificationData) {
+                const notification = {
+                    id: Date.now() + Math.random(),
+                    title: notificationData.title || 'Notification',
+                    message: notificationData.message || notificationData.body || 'No message',
+                    timestamp: new Date(),
+                    tags: notificationData.tags || [],
+                    priority: notificationData.priority || 3,
+                    icon: notificationData.icon,
+                    click: notificationData.click
+                };
+
+                // Add to beginning of array
+                this.notifications.unshift(notification);
+
+                // Keep only the last maxNotifications
+                if (this.notifications.length > this.maxNotifications) {
+                    this.notifications = this.notifications.slice(0, this.maxNotifications);
+                }
+
+                this.updateNotificationsDisplay();
+            }
+
+            updateNotificationsDisplay() {
+                const listElement = document.getElementById('notificationsList');
+                const countElement = document.getElementById('notificationCount');
+                
+                // Update count
+                countElement.textContent = this.notifications.length;
+
+                if (this.notifications.length === 0) {
+                    listElement.innerHTML = `
+                        <div style="padding: 20px; text-align: center; color: #999;">
+                            No notifications received yet. Subscribe to a topic and send a test notification to see them here.
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Create notification items
+                const notificationsHtml = this.notifications.map(notification => {
+                    const timeAgo = this.getTimeAgo(notification.timestamp);
+                    const priorityText = this.getPriorityText(notification.priority);
+                    
+                    const tagsHtml = notification.tags.length > 0 
+                        ? `<div class="notification-tags">
+                            ${notification.tags.map(tag => `<span class="notification-tag">${tag}</span>`).join('')}
+                           </div>`
+                        : '';
+
+                    return `
+                        <div class="notification-item" data-id="${notification.id}">
+                            <div class="notification-title">${this.escapeHtml(notification.title)}</div>
+                            <div class="notification-message">${this.escapeHtml(notification.message)}</div>
+                            <div class="notification-meta">
+                                <span>${timeAgo}</span>
+                                <span>Priority: ${priorityText}</span>
+                            </div>
+                            ${tagsHtml}
+                        </div>
+                    `;
+                }).join('');
+
+                listElement.innerHTML = notificationsHtml;
+            }
+
+            getTimeAgo(timestamp) {
+                const now = new Date();
+                const diff = now - timestamp;
+                const seconds = Math.floor(diff / 1000);
+                const minutes = Math.floor(seconds / 60);
+                const hours = Math.floor(minutes / 60);
+
+                if (seconds < 60) return `${seconds}s ago`;
+                if (minutes < 60) return `${minutes}m ago`;
+                if (hours < 24) return `${hours}h ago`;
+                return timestamp.toLocaleDateString();
+            }
+
+            getPriorityText(priority) {
+                const priorityMap = {
+                    1: 'Min',
+                    2: 'Low', 
+                    3: 'Default',
+                    4: 'High',
+                    5: 'Urgent'
+                };
+                return priorityMap[priority] || 'Default';
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            clearNotifications() {
+                this.notifications = [];
+                this.updateNotificationsDisplay();
+            }
+
+            async requestNotificationPermission() {
+                if (!('Notification' in window)) {
+                    console.log('This browser does not support notifications');
+                    return false;
+                }
+
+                const permission = await Notification.requestPermission();
+                return permission === 'granted';
+            }
+
+            async subscribeToTopic(topic) {
+                if (!this.swRegistration) {
+                    throw new Error('Service Worker not registered');
+                }
+
+                try {
+                    console.log('Creating push subscription...');
+                    console.log('VAPID Key:', this.vapidKey);
+                    console.log('VAPID Key length:', this.vapidKey.length);
+                    
+                    // Validate VAPID key format
+                    if (!this.vapidKey || this.vapidKey.length < 80) {
+                        throw new Error(`Invalid VAPID key: Key is too short (${this.vapidKey?.length || 0} chars). VAPID keys should be at least 80 characters long.`);
+                    }
+                    
+                    // Test VAPID key conversion
+                    try {
+                        const testArray = this.urlB64ToUint8Array(this.vapidKey);
+                        console.log('VAPID key conversion successful, length:', testArray.length);
+                        if (testArray.length !== 65) {
+                            console.warn('VAPID key should be 65 bytes, got:', testArray.length);
+                        }
+                    } catch (vapidError) {
+                        throw new Error(`Invalid VAPID key format: ${vapidError.message}`);
+                    }
+                    
+                    // Check if we already have a subscription
+                    const existingSubscription = await this.swRegistration.pushManager.getSubscription();
+                    if (existingSubscription) {
+                        console.log('Found existing subscription, unsubscribing first...');
+                        await existingSubscription.unsubscribe();
+                    }
+                    
+                    console.log('Creating new push subscription...');
+                    const subscription = await this.swRegistration.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: this.urlB64ToUint8Array(this.vapidKey)
+                    });
+
+                    console.log('Push subscription created successfully:', subscription);
+                    console.log('Subscription endpoint:', subscription.endpoint);
+                    
+                    // Send subscription to our API
+                    console.log('Sending subscription to our API...');
+                    await this.registerWithAPI(subscription, topic);
+                    
+                    return subscription;
+                } catch (error) {
+                    console.error('Push subscription error details:', error);
+                    console.error('Error name:', error.name);
+                    console.error('Error message:', error.message);
+                    console.error('Error stack:', error.stack);
+                    
+                    // Provide specific error messages for common issues
+                    if (error.name === 'AbortError') {
+                        throw new Error(`Web Push registration failed. This usually means:
+1. VAPID key is invalid or doesn't match the server
+2. Browser doesn't support Web Push API
+3. Network connectivity issues
+4. HTTPS is required for Web Push (except localhost)
+
+Try:
+- Using a valid VAPID key from your server
+- Testing on HTTPS or localhost
+- Checking browser console for more details`);
+                    } else if (error.name === 'NotAllowedError') {
+                        throw new Error('Notification permission denied. Please allow notifications and try again.');
+                    } else if (error.name === 'NotSupportedError') {
+                        throw new Error('Web Push is not supported in this browser. Try using Chrome, Firefox, or Edge.');
+                    } else if (error.name === 'NetworkError') {
+                        throw new Error('Network error occurred. Check your internet connection and try again.');
+                    } else if (error.message.includes('VAPID')) {
+                        throw error; // Re-throw VAPID-specific errors
+                    } else {
+                        throw new Error(`Web Push subscription failed: ${error.message}`);
+                    }
+                }
+            }
+
+            async registerWithAPI(subscription, topic) {
+                console.log('Registering with our API...');
+                console.log('API URL:', this.apiUrl);
+                console.log('Topic:', topic);
+                console.log('Subscription endpoint:', subscription.endpoint);
+                
+                // Extract the keys from the subscription
+                const auth = this.arrayBufferToBase64(subscription.getKey('auth'));
+                const p256dh = this.arrayBufferToBase64(subscription.getKey('p256dh'));
+                
+                console.log('Subscription keys:', {
+                    auth: auth.substring(0, 20) + '...',
+                    p256dh: p256dh.substring(0, 20) + '...'
+                });
+                
+                try {
+                    const response = await fetch(`${this.apiUrl}/v1/webpush`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${this.authToken}`
+                        },
+                        body: JSON.stringify({
+                            endpoint: subscription.endpoint,
+                            auth: auth,
+                            p256dh: p256dh,
+                            topics: [topic]
+                        })
+                    });
+
+                    console.log('API Response status:', response.status);
+                    console.log('API Response headers:', Object.fromEntries(response.headers.entries()));
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('API Error response:', errorText);
+                        
+                        let errorMessage = `Failed to register with API: ${response.status}`;
+                        
+                        try {
+                            const errorJson = JSON.parse(errorText);
+                            if (errorJson.message) {
+                                errorMessage += ` - ${errorJson.message}`;
+                            }
+                            if (errorJson.error) {
+                                errorMessage += ` - ${errorJson.error}`;
+                            }
+                        } catch (parseError) {
+                            errorMessage += ` - ${errorText}`;
+                        }
+                        
+                        throw new Error(errorMessage);
+                    }
+
+                    const result = await response.json();
+                    console.log('API response:', result);
+                    return result;
+                } catch (error) {
+                    console.error('API registration error:', error);
+                    
+                    if (error.message.includes('401')) {
+                        throw new Error('Authentication failed. Please check your Bearer token.');
+                    } else if (error.message.includes('403')) {
+                        throw new Error('Access denied. You may not have permission to access this topic.');
+                    } else if (error.message.includes('404')) {
+                        throw new Error('API endpoint not found. Please check the API URL.');
+                    } else if (error.message.includes('500')) {
+                        throw new Error('Server error. Please try again later.');
+                    } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                        throw new Error('Network error. Please check your internet connection and API URL.');
+                    } else {
+                        throw new Error(`API registration failed: ${error.message}`);
+                    }
+                }
+            }
+
+            async unsubscribe() {
+                if (!this.swRegistration) {
+                    return;
+                }
+
+                const subscription = await this.swRegistration.pushManager.getSubscription();
+                if (subscription) {
+                    await subscription.unsubscribe();
+                    
+                    // Remove subscription from ntfy
+                    try {
+                        await fetch(`${this.apiUrl}/v1/webpush`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `Bearer ${this.authToken}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ endpoint: subscription.endpoint })
+                        });
+                    } catch (error) {
+                        console.warn('Failed to notify API of unsubscribe:', error);
+                    }
+                }
+            }
+
+            async getSubscription() {
+                if (!this.swRegistration) {
+                    return null;
+                }
+                return await this.swRegistration.pushManager.getSubscription();
+            }
+
+            urlB64ToUint8Array(base64String) {
+                const padding = '='.repeat((4 - base64String.length % 4) % 4);
+                const base64 = (base64String + padding)
+                    .replace(/-/g, '+')
+                    .replace(/_/g, '/');
+
+                const rawData = window.atob(base64);
+                const outputArray = new Uint8Array(rawData.length);
+
+                for (let i = 0; i < rawData.length; ++i) {
+                    outputArray[i] = rawData.charCodeAt(i);
+                }
+                return outputArray;
+            }
+
+            arrayBufferToBase64(buffer) {
+                const bytes = new Uint8Array(buffer);
+                let binary = '';
+                for (let i = 0; i < bytes.byteLength; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                return btoa(binary);
+            }
+        }
+
+        let webPushManager = null;
+
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+
+        function showSubscriptionInfo(subscription) {
+            const infoDiv = document.getElementById('subscriptionInfo');
+            if (subscription) {
+                infoDiv.textContent = JSON.stringify(subscription, null, 2);
+                infoDiv.style.display = 'block';
+            } else {
+                infoDiv.style.display = 'none';
+            }
+        }
+
+        document.getElementById('initBtn').addEventListener('click', async () => {
+            const apiUrl = document.getElementById('apiUrl').value;
+            const authToken = document.getElementById('authToken').value;
+            const vapidKey = document.getElementById('vapidKey').value;
+
+            if (!apiUrl || !authToken || !vapidKey) {
+                showStatus('Please enter API URL, authentication token, and VAPID key', 'error');
+                return;
+            }
+
+            try {
+                showStatus('Initializing web push...', 'info');
+                
+                webPushManager = new WebPushManager(apiUrl, authToken, vapidKey);
+                
+                const swSupported = await webPushManager.init();
+                if (!swSupported) {
+                    showStatus('Service Worker is not supported in this browser', 'error');
+                    return;
+                }
+
+                const permissionGranted = await webPushManager.requestNotificationPermission();
+                if (!permissionGranted) {
+                    showStatus('Notification permission denied', 'error');
+                    return;
+                }
+
+                            showStatus('Web Push initialized successfully!', 'success');
+            document.getElementById('subscribeBtn').disabled = false;
+            document.getElementById('unsubscribeBtn').disabled = false;
+            document.getElementById('testBtn').disabled = false;
+            document.getElementById('checkSubscriptionBtn').disabled = false;
+            document.getElementById('manualTestBtn').disabled = false;
+                
+            } catch (error) {
+                showStatus(`Initialization failed: ${error.message}`, 'error');
+                console.error('Initialization error:', error);
+            }
+        });
+
+        document.getElementById('subscribeBtn').addEventListener('click', async () => {
+            const topic = document.getElementById('topic').value;
+            
+            if (!topic) {
+                showStatus('Please enter a topic name', 'error');
+                return;
+            }
+
+            try {
+                showStatus('Subscribing to topic...', 'info');
+                
+                const subscription = await webPushManager.subscribeToTopic(topic);
+                showSubscriptionInfo(subscription);
+                showStatus(`Successfully subscribed to topic: ${topic}`, 'success');
+                
+                // Show additional info about the subscription
+                console.log('Subscription details:', {
+                    endpoint: subscription.endpoint,
+                    topic: topic,
+                    keys: {
+                        auth: subscription.getKey('auth') ? 'Present' : 'Missing',
+                        p256dh: subscription.getKey('p256dh') ? 'Present' : 'Missing'
+                    }
+                });
+                
+            } catch (error) {
+                showStatus(`Subscription failed: ${error.message}`, 'error');
+                console.error('Subscription error:', error);
+            }
+        });
+
+        document.getElementById('unsubscribeBtn').addEventListener('click', async () => {
+            try {
+                showStatus('Unsubscribing...', 'info');
+                
+                await webPushManager.unsubscribe();
+                showSubscriptionInfo(null);
+                showStatus('Successfully unsubscribed', 'success');
+                
+            } catch (error) {
+                showStatus(`Unsubscribe failed: ${error.message}`, 'error');
+                console.error('Unsubscribe error:', error);
+            }
+        });
+
+        document.getElementById('testBtn').addEventListener('click', async () => {
+            const topic = document.getElementById('topic').value;
+            const apiUrl = document.getElementById('apiUrl').value;
+            const authToken = document.getElementById('authToken').value;
+            
+            try {
+                showStatus('Sending test notification...', 'info');
+                
+                // Send a test notification directly to ntfy (plain text body)
+                const response = await fetch(`${apiUrl.replace(/\/$/, '')}/${encodeURIComponent(topic)}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: 'This is a test notification from the web push test page!'
+                });
+
+                if (response.ok) {
+                    showStatus('Test notification sent successfully!', 'success');
+                } else {
+                    const errorText = await response.text();
+                    showStatus(`Failed to send test notification: ${response.status} - ${errorText}`, 'error');
+                }
+                
+            } catch (error) {
+                showStatus(`Test notification failed: ${error.message}`, 'error');
+                console.error('Test notification error:', error);
+            }
+        });
+
+        // Clear notifications button
+        document.getElementById('clearNotifications').addEventListener('click', () => {
+            if (webPushManager) {
+                webPushManager.clearNotifications();
+            }
+        });
+
+        // Check subscription button
+        document.getElementById('checkSubscriptionBtn').addEventListener('click', async () => {
+            if (!webPushManager) {
+                showStatus('Web Push not initialized', 'error');
+                return;
+            }
+
+            try {
+                showStatus('Checking subscription...', 'info');
+                
+                const subscription = await webPushManager.getSubscription();
+                if (subscription) {
+                    const topic = document.getElementById('topic').value;
+                    showStatus(`Active subscription found for topic: ${topic}`, 'success');
+                    
+                    console.log('Current subscription:', {
+                        endpoint: subscription.endpoint,
+                        hasAuth: !!subscription.getKey('auth'),
+                        hasP256dh: !!subscription.getKey('p256dh'),
+                        topic: topic
+                    });
+                } else {
+                    showStatus('No active subscription found', 'info');
+                }
+            } catch (error) {
+                showStatus(`Check failed: ${error.message}`, 'error');
+                console.error('Check subscription error:', error);
+            }
+        });
+
+        // Manual test button
+        document.getElementById('manualTestBtn').addEventListener('click', () => {
+            if (webPushManager) {
+                console.log('Manual test notification triggered');
+                const testNotification = {
+                    title: 'Manual Test Notification',
+                    message: 'This is a manual test notification!',
+                    priority: 3,
+                    tags: ['manual-test'],
+                    timestamp: Date.now(),
+                    topic: 'manual-test'
+                };
+                webPushManager.addNotification(testNotification);
+                showStatus('Manual test notification added to UI', 'success');
+            }
+        });
+
+        // Check current subscription on page load
+        window.addEventListener('load', async () => {
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registration = await navigator.serviceWorker.getRegistration();
+                    if (registration) {
+                        const subscription = await registration.pushManager.getSubscription();
+                        if (subscription) {
+                            showSubscriptionInfo(subscription);
+                            showStatus('Found existing subscription', 'info');
+                        }
+                    }
+                } catch (error) {
+                    console.log('No existing subscription found');
+                }
+            }
+        });
+
+        // Debug functionality
+        document.getElementById('debugBtn').addEventListener('click', () => {
+            const debugInfo = document.getElementById('debugInfo');
+            const debugData = {
+                browser: {
+                    userAgent: navigator.userAgent,
+                    serviceWorker: 'serviceWorker' in navigator,
+                    pushManager: 'PushManager' in window,
+                    notifications: 'Notification' in window,
+                    permissions: 'permissions' in navigator
+                },
+                location: {
+                    protocol: window.location.protocol,
+                    hostname: window.location.hostname,
+                    port: window.location.port,
+                    href: window.location.href
+                },
+                notificationPermission: Notification.permission,
+                currentValues: {
+                    apiUrl: document.getElementById('apiUrl').value,
+                    vapidKey: document.getElementById('vapidKey').value ? 'Set' : 'Not set',
+                    topic: document.getElementById('topic').value,
+                    authToken: document.getElementById('authToken').value ? 'Set' : 'Not set'
+                }
+            };
+
+            debugInfo.textContent = JSON.stringify(debugData, null, 2);
+            debugInfo.style.display = debugInfo.style.display === 'none' ? 'block' : 'none';
+        });
+    </script>
+</body>
+</html> 

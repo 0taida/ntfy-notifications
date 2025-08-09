@@ -1,0 +1,22 @@
+{
+  "name": "ntfy-web-push-test",
+  "version": "1.0.0",
+  "description": "Test web push notifications with ntfy",
+  "main": "server.js",
+  "scripts": {
+    "setup": "chmod +x setup-https.sh && ./setup-https.sh",
+    "start": "node server.js",
+    "dev": "npm run setup && npm start"
+  },
+  "keywords": [
+    "ntfy",
+    "web-push",
+    "notifications",
+    "https"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+} 

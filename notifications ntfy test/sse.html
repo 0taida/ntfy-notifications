@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>ntfy Topic Subscription</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 1em;
+    }
+
+    .input-group {
+      margin: 1em 0;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 0.5em;
+      font-weight: bold;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 0.5em;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      padding: 0.5em 1em;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    #messages {
+      margin-top: 1em;
+      border: 1px solid #ddd;
+      padding: 1em;
+      min-height: 200px;
+      background: #f9f9f9;
+    }
+
+    .message {
+      margin: 0.5em 0;
+      padding: 0.5em;
+      background: white;
+      border-left: 3px solid #007bff;
+    }
+
+    .error {
+      border-left-color: #dc3545;
+    }
+
+    .status {
+      margin: 1em 0;
+      padding: 0.5em;
+      border-radius: 4px;
+    }
+
+    .status.connected {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status.disconnected {
+      background: #f8d7da;
+      color: #721c24;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>ntfy Topic Subscription</h1>
+
+  <div class="input-group">
+    <label for="host">ntfy SSE URL (topic/sse):</label>
+    <input type="text" id="host" placeholder="http://localhost:8099" value="http://localhost:8099">
+  </div>
+
+  <div class="input-group">
+    <label for="topic">Topic:</label>
+    <input type="text" id="topic" placeholder="Enter topic name" value="user_b70a2a56-aa73-4f87-96d8-a6ab98f299b8_mdzs0288_hxo8mor5q">
+  </div>
+
+  <div class="input-group">
+    <label for="token">Bearer token (optional, for protected topics):</label>
+    <input type="text" id="token" placeholder="tk_...">
+  </div>
+
+  <button id="connectBtn" onclick="connectToTopic()">Connect to Topic</button>
+  <button id="disconnectBtn" onclick="disconnectFromTopic()" style="display: none;">Disconnect</button>
+
+  <div id="status" class="status"></div>
+  <div id="messages">Enter host and topic, then click "Connect to Topic" to start receiving messages...</div>
+
+  <script>
+    let eventSource = null;
+    let isConnected = false;
+
+    // Ask for notification permission on page load
+    if (Notification.permission === "default") {
+      Notification.requestPermission().then(permission => {
+        if (permission !== "granted") {
+          console.log("Notifications won't appear because permission was denied.");
+        }
+      });
+    }
+
+    function connectToTopic() {
+      const host = document.getElementById('host').value.trim();
+      const topic = document.getElementById('topic').value.trim();
+
+      if (!host || !topic) {
+        alert('Please enter both host and topic');
+        return;
+      }
+
+      // Disconnect if already connected
+      if (eventSource) {
+        eventSource.close();
+      }
+
+      // Remove trailing slash from host if present
+      const cleanHost = host.endsWith('/') ? host.slice(0, -1) : host;
+      const token = document.getElementById('token').value.trim();
+
+      let ntfyURL = `${cleanHost}/${encodeURIComponent(topic)}/sse`;
+      if (token) {
+        // Encode 'Bearer <token>' as base64url (no padding) for the 'authorization' query param
+        const bearer = `Bearer ${token}`;
+        const b64 = btoa(bearer).replace(/=+$/,'').replace(/\+/g,'-').replace(/\//g,'_');
+        ntfyURL += `?authorization=${b64}`;
+      }
+      const statusDiv = document.getElementById('status');
+      const messagesDiv = document.getElementById('messages');
+
+      // Clear previous messages
+      messagesDiv.innerHTML = '';
+
+      // Update UI
+      document.getElementById('connectBtn').style.display = 'none';
+      document.getElementById('disconnectBtn').style.display = 'inline-block';
+      statusDiv.textContent = `Connecting to ${ntfyURL}...`;
+      statusDiv.className = 'status';
+
+      // Connect to ntfy via SSE
+      eventSource = new EventSource(ntfyURL);
+
+      eventSource.onopen = function (event) {
+        isConnected = true;
+        statusDiv.textContent = `Connected to ${ntfyURL}`;
+        statusDiv.className = 'status connected';
+        addMessage('System: Connection established', 'system');
+      };
+
+      eventSource.onmessage = function (event) {
+        addMessage(`New message: ${event.data}`, 'message');
+
+        // Show browser notification if permission granted
+        if (Notification.permission === "granted") {
+          new Notification("New ntfy Message", {
+            body: event.data,
+            icon: "https://ntfy.sh/static/img/logo.png"
+          });
+        }
+      };
+
+      eventSource.onerror = function (error) {
+        isConnected = false;
+        statusDiv.textContent = `Connection failed or closed`;
+        statusDiv.className = 'status disconnected';
+        addMessage('System: Connection error or closed', 'error');
+        console.error("EventSource failed:", error);
+      };
+    }
+
+    function disconnectFromTopic() {
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+        isConnected = false;
+
+        document.getElementById('connectBtn').style.display = 'inline-block';
+        document.getElementById('disconnectBtn').style.display = 'none';
+
+        const statusDiv = document.getElementById('status');
+        statusDiv.textContent = 'Disconnected';
+        statusDiv.className = 'status disconnected';
+
+        addMessage('System: Disconnected from topic', 'system');
+      }
+    }
+
+    function addMessage(text, type = 'message') {
+      const messagesDiv = document.getElementById('messages');
+      const msg = document.createElement('div');
+      msg.className = `message ${type}`;
+      msg.textContent = text;
+      messagesDiv.appendChild(msg);
+
+      // Auto-scroll to bottom
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    // Allow Enter key to connect
+    document.addEventListener('keypress', function (e) {
+      if (e.key === 'Enter' && !isConnected) {
+        connectToTopic();
+      }
+    });
+  </script>
+</body>
+
+</html>

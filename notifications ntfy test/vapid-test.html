@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VAPID Key Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .error {
+            color: red;
+            background: #ffe6e6;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            color: green;
+            background: #e6ffe6;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>VAPID Key Test Tool</h1>
+    
+    <div class="container">
+        <h3>Test Your VAPID Key</h3>
+        <p>Enter your VAPID public key below to validate it:</p>
+        <textarea id="vapidKey" placeholder="Enter your VAPID public key here..."></textarea>
+        <br>
+        <button onclick="testVapidKey()">Test VAPID Key</button>
+        <div id="result"></div>
+    </div>
+
+    <div class="container">
+        <h3>Generate VAPID Keys (for testing)</h3>
+        <p>Click the button below to generate a test VAPID key pair:</p>
+        <button onclick="generateVapidKeys()">Generate VAPID Keys</button>
+        <div id="generatedKeys"></div>
+    </div>
+
+    <div class="container">
+        <h3>Troubleshooting Tips</h3>
+        <ul>
+            <li><strong>VAPID Key Format:</strong> Should be 87 characters long (65 bytes encoded in base64)</li>
+            <li><strong>HTTPS Required:</strong> Web Push only works on HTTPS or localhost</li>
+            <li><strong>Browser Support:</strong> Make sure you're using a modern browser (Chrome, Firefox, Edge)</li>
+            <li><strong>Service Worker:</strong> Must be served from the same domain as your web app</li>
+            <li><strong>ntfy Configuration:</strong> Ensure your ntfy server has web push enabled with the correct VAPID keys</li>
+        </ul>
+    </div>
+
+    <script>
+        function urlB64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding)
+                .replace(/-/g, '+')
+                .replace(/_/g, '/');
+
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+
+        function testVapidKey() {
+            const vapidKey = document.getElementById('vapidKey').value.trim();
+            const resultDiv = document.getElementById('result');
+            
+            if (!vapidKey) {
+                resultDiv.innerHTML = '<div class="error">Please enter a VAPID key</div>';
+                return;
+            }
+
+            try {
+                // Test basic format
+                if (vapidKey.length !== 87) {
+                    resultDiv.innerHTML = `<div class="error">Invalid length: ${vapidKey.length} characters. Expected 87 characters.</div>`;
+                    return;
+                }
+
+                // Test base64 conversion
+                const keyArray = urlB64ToUint8Array(vapidKey);
+                
+                if (keyArray.length !== 65) {
+                    resultDiv.innerHTML = `<div class="error">Invalid key size: ${keyArray.length} bytes. Expected 65 bytes.</div>`;
+                    return;
+                }
+
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ VAPID key is valid!<br>
+                        Length: ${vapidKey.length} characters<br>
+                        Decoded size: ${keyArray.length} bytes<br>
+                        First few bytes: ${Array.from(keyArray.slice(0, 5)).join(', ')}...
+                    </div>
+                `;
+
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Invalid VAPID key: ${error.message}</div>`;
+            }
+        }
+
+        function generateVapidKeys() {
+            // Generate a random 65-byte key (for testing purposes)
+            const keyArray = new Uint8Array(65);
+            crypto.getRandomValues(keyArray);
+            
+            // Convert to base64
+            let binary = '';
+            for (let i = 0; i < keyArray.length; i++) {
+                binary += String.fromCharCode(keyArray[i]);
+            }
+            const base64 = btoa(binary)
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/=/g, '');
+
+            const keysDiv = document.getElementById('generatedKeys');
+            keysDiv.innerHTML = `
+                <div class="success">
+                    <h4>Generated Test VAPID Keys:</h4>
+                    <p><strong>Public Key:</strong></p>
+                    <textarea readonly style="height: 60px;">${base64}</textarea>
+                    <p><strong>Private Key:</strong></p>
+                    <textarea readonly style="height: 60px;">${base64}PRIVATE</textarea>
+                    <p><em>Note: These are test keys. For production, generate proper VAPID keys using ntfy or a VAPID key generator.</em></p>
+                </div>
+            `;
+        }
+
+        // Auto-test when page loads
+        window.addEventListener('load', () => {
+            // Check if we're on HTTPS or localhost
+            const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost';
+            if (!isSecure) {
+                document.getElementById('result').innerHTML = `
+                    <div class="error">
+                        ⚠️ Warning: Web Push requires HTTPS or localhost. 
+                        Current protocol: ${window.location.protocol}
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html> 
