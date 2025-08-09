@@ -11,7 +11,7 @@
 # - iOS push notifications for self-hosted servers (to calculate the Firebase poll_request topic)
 # - Matrix Push Gateway (to validate that the pushkey is correct)
 #
-# base-url:
+base-url: "http://localhost:8099"
 
 # Listen address for the HTTP & HTTPS web server. If "listen-https" is set, you must also
 # set "key-file" and "cert-file". Format: [<ip>]:<port>, e.g. "1.2.3.4:8080".
@@ -19,7 +19,7 @@
 # To listen on all interfaces, you may omit the IP address, e.g. ":443".
 # To disable HTTP, set "listen-http" to "-".
 #
-# listen-http: ":80"
+listen-http: ":8099"
 # listen-https:
 
 # Listen on a Unix socket, e.g. /var/lib/ntfy/ntfy.sock
@@ -99,8 +99,8 @@
 #   If you are running ntfy with systemd, make sure this user database file is owned by the
 #   ntfy user and group by running: chown ntfy.ntfy <filename>.
 #
-# auth-file: <filename>
-# auth-default-access: "read-write"
+auth-file: "/home/taida/Desktop/ntfy/user.db"
+auth-default-access: "deny-all"
 # auth-startup-queries:
 # auth-users:
 # auth-access:
@@ -202,20 +202,20 @@
 # - web-push-expiry-warning-duration defines the duration after which unused subscriptions are sent a warning (default is 55d`)
 # - web-push-expiry-duration defines the duration after which unused subscriptions will expire (default is 60d)
 #
-# web-push-public-key:
-# web-push-private-key:
-# web-push-file:
-# web-push-email-address:
+web-push-public-key: "<YOUR_WEB_PUSH_PUBLIC_KEY>"
+web-push-private-key: "<YOUR_WEB_PUSH_PRIVATE_KEY>"
+web-push-file: "/tmp/webpush.db"
+web-push-email-address: "sysadmin@example.com"
 # web-push-startup-queries:
 # web-push-expiry-warning-duration: "55d"
 # web-push-expiry-duration: "60d"
 
 # If enabled, ntfy can perform voice calls via Twilio via the "X-Call" header.
 #
-# - twilio-account is the Twilio account SID, e.g. ***REMOVED***
-# - twilio-auth-token is the Twilio auth token, e.g. affebeef258625862586258625862586
+# - twilio-account is the Twilio account SID, e.g. AC_your_account_sid
+# - twilio-auth-token is the Twilio auth token, e.g. <YOUR_TWILIO_AUTH_TOKEN>
 # - twilio-phone-number is the outgoing phone number you purchased, e.g. +18775132586
-# - twilio-verify-service is the Twilio Verify service SID, e.g. ***REMOVED***
+# - twilio-verify-service is the Twilio Verify service SID, e.g. VA_your_verify_service_sid
 #
 # twilio-account:
 # twilio-auth-token:

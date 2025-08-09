@@ -1214,8 +1214,8 @@ to `https://ntfy.example.com/v1/account/billing/webhook`.
 Here's an example:
 
 ``` yaml
-stripe-secret-key: "***REMOVED***"
-stripe-webhook-key: "***REMOVED***"
+stripe-secret-key: "<YOUR_STRIPE_SECRET_KEY>"
+stripe-webhook-key: "<YOUR_STRIPE_WEBHOOK_SECRET>"
 billing-contact: "phil@example.com"
 ```
 
@@ -1227,10 +1227,10 @@ See [publishing page](publish.md#phone-calls) for more details.
 To enable Twilio integration, sign up with [Twilio](https://www.twilio.com/), purchase a phone number (Toll free numbers
 are the easiest), and then configure the following options:
 
-* `twilio-account` is the Twilio account SID, e.g. ***REMOVED***
-* `twilio-auth-token` is the Twilio auth token, e.g. affebeef258625862586258625862586
+* `twilio-account` is the Twilio account SID, e.g. AC_your_account_sid
+* `twilio-auth-token` is the Twilio auth token, e.g. <YOUR_TWILIO_AUTH_TOKEN>
 * `twilio-phone-number` is the outgoing phone number you purchased, e.g. +18775132586 
-* `twilio-verify-service` is the Twilio Verify service SID, e.g. ***REMOVED***
+* `twilio-verify-service` is the Twilio Verify service SID, e.g. VA_your_verify_service_sid
 
 After you have configured phone calls, create a [tier](#tiers) with a call limit (e.g. `ntfy tier create --call-limit=10 ...`),
 and then assign it to a user. Users may then use the `X-Call` header to receive a phone call when publishing a message.
