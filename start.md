@@ -1,46 +1,64 @@
+# ntfy Quick Start Guide
+**Web Push + Authentication Setup**
 
-## ntfy: quick start (Web Push + Auth)
+This guide walks you through setting up ntfy with Web Push notifications and token-based authentication.
 
-Follow these steps to run the server, enable Web Push, and secure access with tokens.
+## Prerequisites
 
-### 1) Configure `server/server.yml`
-- Already set in this repo:
-  - `base-url: "http://localhost:8099"`
-  - `listen-http: ":8099"`
-  - `web-push-public-key`, `web-push-private-key`, `web-push-file`, `web-push-email-address`
-  - `auth-file: "/home/taida/Desktop/ntfy/user.db"`
-  - `auth-default-access: "deny-all"` (requires auth by default)
-
-If you need to generate a fresh VAPID key pair:
+Before starting, build the required dependencies for the web interface:
+```bash
+make cli-deps-static-sites
 ```
+
+## Step 1: Configure the Server
+
+The `server/server.yml` file is already configured with:
+- **Base URL**: `http://localhost:8099`
+- **Listen Port**: `:8099`
+- **Web Push Keys**: `web-push-public-key`, `web-push-private-key`, `web-push-file`, `web-push-email-address`
+- **Auth Database**: `/home/taida/Desktop/ntfy/user.db`
+- **Default Access**: `deny-all` (requires authentication by default)
+
+### Generate VAPID Keys (Optional)
+If you need fresh VAPID keys for Web Push:
+```bash
 go run main.go webpush keys
 ```
-Paste the printed public/private keys into `server/server.yml` under `web-push-*`.
+Copy the generated public/private keys into `server/server.yml` under the `web-push-*` settings.
 
-### 2) Start the server
-```
+## Step 2: Start the Server
+
+```bash
 go run main.go serve --config server/server.yml
 ```
-Note: Avoid `sudo` on port 8099 to keep the auth DB writable by your user.
+> **Note**: Avoid using `sudo` on port 8099 to keep the auth database writable by your user.
 
-### 3) Create an admin user
-Run this in another terminal while the server is running:
-```
+## Step 3: Create an Admin User
+
+In a new terminal (while the server is running):
+```bash
 NTFY_PASSWORD='ChangeMe_Strong!' \
   go run main.go user --config server/server.yml add --role=admin admin
 ```
 
-### 4) Issue a Bearer token for the admin
-```
+## Step 4: Generate Bearer Token
+
+Create a token for API access:
+```bash
 go run main.go token --config server/server.yml add --label nextjs admin
 ```
-Copy the printed token and store it as a server-side secret (e.g., `NTFY_TOKEN`).
+**Important**: Save the generated token securely (e.g., as `NTFY_TOKEN` environment variable).
 
-### 5) Use the token
-- Send the token in requests: `Authorization: Bearer <token>`
+## Step 5: Using the API
 
-Register a Web Push subscription:
+### Authentication
+Include the Bearer token in all API requests:
 ```
+Authorization: Bearer <your-token>
+```
+
+### Register Web Push Subscription
+```bash
 curl -X POST \
   -H "Authorization: Bearer $NTFY_TOKEN" \
   -H "Content-Type: application/json" \
@@ -53,14 +71,21 @@ curl -X POST \
   http://localhost:8099/v1/webpush
 ```
 
-Publish a message to a topic:
-```
-curl -X POST -H "Authorization: Bearer $NTFY_TOKEN" -d "Hello" http://localhost:8099/<topic>
+### Publish a Message
+```bash
+curl -X POST \
+  -H "Authorization: Bearer $NTFY_TOKEN" \
+  -d "Hello" \
+  http://localhost:8099/<topic>
 ```
 
-Optional: Allow anonymous read to a public topic (ACL)
-```
+## Optional: Public Topic Access
+
+To allow anonymous read access to a public topic:
+```bash
 go run main.go access --config server/server.yml everyone announcements read
 ```
 
-More details: https://docs.ntfy.sh/
+## Additional Resources
+
+For more detailed documentation, visit: https://docs.ntfy.sh/
