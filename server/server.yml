@@ -99,7 +99,7 @@ listen-http: ":8099"
 #   If you are running ntfy with systemd, make sure this user database file is owned by the
 #   ntfy user and group by running: chown ntfy.ntfy <filename>.
 #
-auth-file: "/home/taida/Desktop/ntfy/user.db"
+auth-file: "/mnt/windows/doing2 projects/ntfy-notifications/user.db"
 auth-default-access: "deny-all"
 # auth-startup-queries:
 # auth-users:
@@ -202,8 +202,8 @@ auth-default-access: "deny-all"
 # - web-push-expiry-warning-duration defines the duration after which unused subscriptions are sent a warning (default is 55d`)
 # - web-push-expiry-duration defines the duration after which unused subscriptions will expire (default is 60d)
 #
-web-push-public-key: "<YOUR_WEB_PUSH_PUBLIC_KEY>"
-web-push-private-key: "<YOUR_WEB_PUSH_PRIVATE_KEY>"
+web-push-public-key: "BHSL0I3B9redgnT6CB7S4UZ8pN68nSbk_vhIqO4zrzv73RDXnwYtXcCcBmRqYzoOJr9nP2i8Jl2TToKyXkBjgWg"
+web-push-private-key: "CKNUdKS5g-q3C_H8GTU0uIMZ4ywQk6tDwBlyJZFauPw"
 web-push-file: "/tmp/webpush.db"
 web-push-email-address: "sysadmin@example.com"
 # web-push-startup-queries:
@@ -297,7 +297,7 @@ web-push-email-address: "sysadmin@example.com"
 
 # Rate limiting: Number of subscriptions per visitor (IP address)
 #
-# visitor-subscription-limit: 30
+visitor-subscription-limit: 1000
 
 # Rate limiting: Allowed GET/PUT/POST requests per second, per visitor:
 # - visitor-request-limit-burst is the initial bucket of requests each visitor has

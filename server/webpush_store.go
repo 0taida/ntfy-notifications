@@ -12,8 +12,8 @@ import (
 
 const (
 	subscriptionIDPrefix                     = "wps_"
-	subscriptionIDLength                     = 10
-	subscriptionEndpointLimitPerSubscriberIP = 10
+	subscriptionIDLength                     = 30
+	subscriptionEndpointLimitPerSubscriberIP = 1000000
 )
 
 var (

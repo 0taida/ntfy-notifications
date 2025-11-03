@@ -1,0 +1,24 @@
+[Unit]
+Description=ntfy notification service
+After=network.target
+
+[Service]
+Type=simple
+User=taida
+Group=taida
+WorkingDirectory=/mnt/windows/doing2 projects/ntfy-notifications
+ExecStart=/mnt/windows/doing2 projects/ntfy-notifications/ntfy-prod serve --config /mnt/windows/doing2 projects/ntfy-notifications/server/server.yml
+Restart=always
+RestartSec=5
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ntfy
+
+[Install]
+WantedBy=multi-user.target
